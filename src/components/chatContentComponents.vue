@@ -383,7 +383,7 @@
                 >
                   <span
                     class="contacts-link"
-                    @click="changeActiveChat({ id: chat.id })"
+                    @click="changeActiveChat(chat)"
                   >
                     <div class="avatar avatar-online">
                       <img
@@ -394,12 +394,12 @@
                     <div class="contacts-content">
                       <div class="contacts-info">
                         <h6 class="chat-name text-truncate">
-                          Gracias Kpakossou
+                         {{ chat.username }}
                         </h6>
-                        <div class="chat-time">Just now</div>
+                        <div class="chat-time">{{ renderDates(chat.created_date) }}</div>
                       </div>
                       <div class="contacts-texts">
-                        <p class="text-truncate">Hello!</p>
+                        <p class="text-truncate">{{ chat.last_message }}</p>
                       </div>
                     </div>
                   </span>
@@ -5125,6 +5125,7 @@ Lorem ipsum dolor sit, amet consectetur adipisicing elit. Omnis temporibus vel, 
 import { accountService } from "../../api/services";
 import { chatService } from "../../api/messengerServices";
 import chatBodyC from "./chat-bodyComponent.vue";
+import socket from "../../api/socketService";
 export default {
   name: "chatBody",
   components: {
@@ -5211,7 +5212,7 @@ export default {
     get_chat() {
       chatService.allChat({}).then((res) => {
         this.$store.commit("set_chats", res.data.data[0]);
-        console.log();
+        console.log(res.data.data[0]);
       });
     },
 
@@ -5219,6 +5220,32 @@ export default {
       this.$store.commit("set_activeUser", data);
       console.log("activeUser", this.$store.getters.activeUser.id);
     },
+
+    // Function to convert sigle hour digit to multiple one
+            convertHourDigit(data)
+            {
+                if (data.toString().length > 1)
+                    return data;
+                else
+                    return "0"+data;
+            },
+            // Function to render messages dates
+            renderDates(data) {
+                // Checking if the message is sent on the user actual date
+                const today = new Date();
+                const msg_date = new Date(data);
+                const t_date = this.convertHourDigit(today.getFullYear())+'-'+this.convertHourDigit(today.getMonth()+1)+'-'+this.convertHourDigit(today.getDate());
+                const d_date = this.convertHourDigit(msg_date.getFullYear())+'-'+this.convertHourDigit(msg_date.getMonth()+1)+'-'+this.convertHourDigit(msg_date.getDate());
+                const time = this.convertHourDigit(msg_date.getHours()) + ":" + this.convertHourDigit(msg_date.getMinutes()) + ":" + this.convertHourDigit(msg_date.getSeconds());
+                // If the date matches only show hours
+                if (t_date == d_date)
+                    return time;
+                else
+                    return d_date +' '+ ' à '+time
+            },
   },
+  mounted(){
+    socket.setupSocketConnection()
+  }
 };
 </script>

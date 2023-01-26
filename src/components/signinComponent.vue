@@ -95,7 +95,8 @@ export default {
   this.on_loading = true;
   accountService.login(this.form).then((res) => {
     // Si l'appel de l'API a réussi, enregistrez le jeton dans le localStorage
-    accountService.saveToken(res.data.accessToken);
+    
+    accountService.saveToken(res.data.accessToken,res.data.id);
 
     // Si le jeton n'a pas été enregistré correctement, affichez un message d'erreur
     if (localStorage.getItem("token") === "undefined") {

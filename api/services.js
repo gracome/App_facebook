@@ -12,8 +12,9 @@ let update = (user) => {
     return Axios.put('/user/update', user);
 }
 let profil = (user) => {
-    return Axios.get('/user/me', user);
+    return Axios.post('/user/me', user);
 }
+
 let userDetail = (id) => {
     return Axios.get('user/find', id);
 }
@@ -27,8 +28,10 @@ let logout = () => {
 let user_list= (user) =>{
     return Axios.get('/user/all', user);
 }
-let saveToken = (token) => {
+let saveToken = (token, id) => {
      localStorage.setItem('token', token);
+     localStorage.setItem('id', id);
+
 }
 let isLogged = () => {
     let token = localStorage.getItem('token');

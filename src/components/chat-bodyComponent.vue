@@ -22,8 +22,8 @@
                                     <img src="https://scontent-sea1-1.xx.fbcdn.net/v/t1.30497-1/84628273_176159830277856_972693363922829312_n.jpg?stp=dst-jpg_p720x720&_nc_cat=1&ccb=1-7&_nc_sid=12b3be&_nc_ohc=qIPCd3XtmYYAX_FfqnE&_nc_ht=scontent-sea1-1.xx&edm=AP4hL3IEAAAA&oh=00_AfDB375RdC6qypjH9vmaFYRvJYur9sViw4SgPu-jxB1Fog&oe=63DFE499" alt="">
                                 </div>
 
-                                <div class="media-body align-self-center ">
-                                    <h6 class="text-truncate mb-0">Gracias Kpakossou</h6>
+                                <div class=" align-self-center ">
+                                    <h6 class="media text-truncate mb-0">Gracias Kpakossou</h6>
                                     <small class="text-muted">Online</small>
                                 </div>
                             </div>
@@ -324,17 +324,23 @@
                                 <!-- Message Day Start -->
                                 <div class="message-day">
                                     <!-- Received Message Start -->
-                                    <div v-for="(msg, x) in this.$store.getters.messages" :key="x"
-                                        class="message"
+                                    <div v-for="(msg, x) in displayMessage" :key="x"
+                                        class="message" :class="msg.sender_id === get_agent_id()? 'self' : ''"
+
+
                                     >
-                                        <div class='message-wrapper'>
-                                            <div class="message-content">
+                                        <div class='message-wrapper'
+                                           :class="msg.sender_id === get_agent_id()? '' : 'd-flex left-0'"
+                                        >
+                                            <div class="message-content"
+                                                :class="msg.sender_id === get_agent_id()? '' : 'd-flex left-0'"
+                                            >
                                                 <span>
                                                     {{ msg.message }}
                                                 </span>
                                             </div>
                                         </div>
-                                        <div class="message-options">
+                                        <div class="message-options  d-flex left-0 ml-4">
                                             <!-- <div class="avatar avatar-offline bg-info text-light">
                                             <span v-if="this.$store.getters.profile.id === msg.sender_id">
                                                 {{ this.$store.getters.profile.username[0].toUpperCase() }}
@@ -345,8 +351,8 @@
                                                 {{ this.$store.getters.activeChat.username[this.$store.getters.activeChat.username.length -1].toUpperCase() }}
                                             </span>
                                         </div> -->
-                                            <span class="message-date">
-                                                {{  new Date() }}
+                                            <span class="message-date" >
+                                                {{  '18:00' }}
                                             </span>
                                             <div class="dropdown">
                                                 <a class="text-muted" href="#" data-toggle="dropdown"
@@ -530,10 +536,10 @@
                                 </div>
                             </div>
 
-                            <textarea class="form-control emojionearea-form-control" id="messageInput" rows="1"
-                                placeholder="Type your message here..."></textarea>
+                            <textarea v-model="agent_msg" class="form-control emojionearea-form-control" id="messageInput" rows="1"
+                                placeholder="Type your message here..." @keydown.enter.exact.prevent="get_messengerResponse()"></textarea>
                             <div class="btn btn-primary btn-icon send-icon rounded-circle text-light mb-1"
-                                role="button">
+                                role="button" @click="get_messengerResponse()">
                                 <svg class="hw-24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -546,7 +552,10 @@
                     </div>
 </template>
 <script>
+import { accountService } from '../../api/services';
 import { chatService } from "../../api/messengerServices"
+import  SocketioService  from "../../api/socketService"
+import socketService from '../../api/socketService';
 export default {
  
 data() {
@@ -575,6 +584,9 @@ sender_id: "02c7c1cb-2162-4b62-b0a9-4145e95db592",
 user_id: "519a4613-032b-4511-b35c-4266fdaec90c"
     }
 ],
+messengerResponse: [],
+profile: {},
+agent_msg: ""
     }
     
 },
@@ -585,12 +597,25 @@ this.get_listChat();
 computed: {
     theActiveChat() {
             return this.$store.getters.active;
+    },
+    theMessage(){
+        return this.$store.getters.test;
+    },
+    displayMessage(){
+        return this.messages;
     }
 },
 
 watch: {
     theActiveChat() {
         
+    },
+    theMessage(){
+        chatService.Findmessage(this.$store.getters.active.id).then((res) => {
+            
+            this.messages= res.data[0]
+            console.log(this.messages);
+        })
     }
 },
 
@@ -598,13 +623,29 @@ methods :{
     get_listChat(){
         console.log('get')
         chatService.Findmessage(this.$store.getters.active.id).then((res) => {
-            console.log('get_liste_chat', this.$store.getters.active.id )
-            this.$store.commit('set_messageListe', res.data[0]);
+            // console.log('get_liste_chat', this.$store.getters.active.id )
+            // this.$store.commit('set_messageListe', res.data[0]);
+            this.messages= res.data[0]
         })
+    },
+    get_messengerResponse(){
+        // chatService.findResponse({chat_id: this.$store.getters.active.id, sender_id: localStorage.getItem('id'), message: this.agent_msg, user_id: this.$store.getters.active.customer_id}).then((res) =>{
+        //     this.messengerResponse= res.data[0]
+        // })
+        console.log('voo');
+       SocketioService.emitMessage({chat_id: this.$store.getters.active.id, sender_id: localStorage.getItem('id'), message: this.agent_msg, user_id: this.$store.getters.active.customer_id});
+    this.agent_msg= '';
+},
+    get_profile(){
+        accountService.profil().then((res)=>{this.profile= res.data})
+
+    },
+    get_agent_id(){
+        return localStorage.getItem('id');
     }
 },
 mounted() {
-    console.log("test mpiubuvu", this.listeMsg);
+    console.log("test mpiubuvu", socketService.subscribe());
 }
 }
 </script>

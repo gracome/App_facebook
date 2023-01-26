@@ -26,7 +26,9 @@ let Findmessage = (chatId) => {
     console.log("gghg", chatId)
     return Axioss.get(`conversations/${chatId}/messages`, chatId);
 }
-
+let findResponse= (chat) =>{
+    return Axioss.post('/message/response', chat);
+}
 export const chatService = {
     addChat,
     allChat,
@@ -35,5 +37,6 @@ export const chatService = {
     closedChat,
     deleteChat,
     register,
-    Findmessage
+    Findmessage,
+    findResponse
 };
